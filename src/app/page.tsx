@@ -1,92 +1,52 @@
 "use client";
 
 import React, { useState } from 'react';
-import { ShoppingCart, X, Plus, Minus, Info, Clock, MapPin, ChevronRight, CheckCircle2, Dumbbell, Droplets, Trophy, Users } from 'lucide-react';
+import Image from 'next/image';
+import { ShoppingCart, X, Plus, Minus, MapPin, ChevronRight, Trophy, Calendar, Clock, Users, Trash2, ArrowRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { FacilitiesSlider, BookingPayload } from '@/components/FacilitiesSlider';
 
-// --- Data ---
-const SERVICES = [
-  {
-    id: 'adult-pools',
-    title: 'Adult Pools (1, 2 & 3)',
-    type: 'Per person / hour',
-    capacity: '50 pax/pool/hr',
-    rate: 2000,
-    icon: Droplets,
-    description: 'Immerse yourself in our premium Olympic-sized pools designed for high-performance training and recovery.',
-    popular: true
-  },
-  {
-    id: 'kids-pool',
-    title: 'Kids Pool 1',
-    type: 'Per person / hour',
-    capacity: '50 pax/pool/hr',
-    rate: 2000,
-    icon: Droplets,
-    description: 'A safe, dynamic aquatic environment perfect for our youngest future champions.'
-  },
-  {
-    id: 'large-soccer',
-    title: 'Large Soccer Field',
-    type: 'Exclusive Reservation',
-    capacity: '1 full field',
-    rate: 140000,
-    icon: Trophy,
-    description: 'Professional-grade turf field. Bring your team, dominate the game.'
-  },
-  {
-    id: 'micro-soccer',
-    title: 'Micro-soccer Field (5v5)',
-    type: 'Exclusive Reservation',
-    capacity: '1 full field',
-    rate: 80000,
-    icon: Trophy,
-    description: 'Fast-paced action on a premium 5v5 pitch. High intensity guaranteed.'
-  },
-  {
-    id: 'multisport-court',
-    title: 'Multisport Court',
-    type: 'Exclusive Reservation',
-    capacity: '1 full field',
-    rate: 70000,
-    icon: Trophy,
-    description: 'Volleyball or Basketball. State-of-the-art flooring for peak performance.'
-  },
-  {
-    id: 'gym-1',
-    title: 'Gym 1',
-    type: 'Per person / hour',
-    capacity: '20 pax/hr',
-    rate: 2000,
-    icon: Dumbbell,
-    description: 'Elite conditioning equipment in a high-energy, motivational environment.'
-  },
-  {
-    id: 'wet-zone',
-    title: 'Wet Zone / Sauna',
-    type: 'Per person / hour',
-    capacity: '10 pax/hr',
-    rate: 4000,
-    icon: Info,
-    description: 'Accelerate recovery with our premium sauna and contrast therapy facilities.',
-    premium: true
-  }
-];
 
-type CartItem = typeof SERVICES[0] & { quantity: number };
+
+export interface CartBookingItem {
+  id: string;
+  facilityId: string;
+  facilityName: string;
+  modalidad: string;
+  date: string;
+  time: string;
+  hours: number;
+  people?: number;
+  rate: number;
+  subtotal: number;
+  icon?: React.ComponentType<{ className?: string }>;
+  primaryColor?: string;
+  image?: string;
+}
 
 export default function Home() {
-  const [cart, setCart] = useState<CartItem[]>([]);
+  const [cart, setCart] = useState<CartBookingItem[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
 
-  const addToCart = (service: typeof SERVICES[0]) => {
-    setCart((prev) => {
-      const existing = prev.find(item => item.id === service.id);
-      if (existing) {
-        return prev.map(item => item.id === service.id ? { ...item, quantity: item.quantity + 1 } : item);
-      }
-      return [...prev, { ...service, quantity: 1 }];
-    });
+  const addBookingToCart = (booking: BookingPayload) => {
+    const isExclusive = booking.isExclusive;
+    const newBooking: CartBookingItem = {
+      id: `${booking.facility.id}-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+      facilityId: booking.facility.id,
+      facilityName: booking.facility.name,
+      modalidad: isExclusive ? 'Reserva Exclusiva' : 'Por persona / hora',
+      date: booking.selectedDate,
+      time: booking.selectedTime,
+      hours: booking.hours,
+      people: isExclusive ? undefined : booking.people,
+      rate: booking.facility.numericRate,
+      subtotal: booking.totalPrice,
+      icon: booking.facility.icon,
+      primaryColor: booking.facility.primaryColor,
+      image: booking.facility.image
+    };
+
+    setCart((prev) => [newBooking, ...prev]);
     setIsCartOpen(true);
   };
 
@@ -94,18 +54,21 @@ export default function Home() {
     setCart((prev) => prev.filter(item => item.id !== id));
   };
 
-  const updateQuantity = (id: string, delta: number) => {
+  const updateHours = (id: string, delta: number) => {
     setCart((prev) => prev.map(item => {
       if (item.id === id) {
-        const newQ = item.quantity + delta;
-        return newQ > 0 ? { ...item, quantity: newQ } : item;
+        const newHours = Math.max(1, Math.min(8, item.hours + delta));
+        const newSubtotal = item.people 
+          ? item.rate * newHours * item.people 
+          : item.rate * newHours;
+        return { ...item, hours: newHours, subtotal: newSubtotal };
       }
       return item;
     }));
   };
 
-  const totalCost = cart.reduce((acc, item) => acc + (item.rate * item.quantity), 0);
-  const totalItems = cart.reduce((acc, item) => acc + item.quantity, 0);
+  const totalCost = cart.reduce((acc, item) => acc + item.subtotal, 0);
+  const totalBookings = cart.length;
 
   const formatCOP = (amount: number) => {
     return new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 }).format(amount);
@@ -139,11 +102,12 @@ export default function Home() {
               animate={{ opacity: 1, x: 0 }}
               onClick={() => setIsCartOpen(true)}
               className="relative p-3 rounded-full hover:bg-black/5 transition-colors"
+              aria-label="Abrir carrito de compras"
             >
               <ShoppingCart className="w-6 h-6 text-club-accent" />
-              {totalItems > 0 && (
-                <span className="absolute top-1 right-1 bg-club-primary text-btn-text text-xs font-bold w-5 h-5 flex items-center justify-center rounded-full animate-pulse">
-                  {totalItems}
+              {totalBookings > 0 && (
+                <span className="absolute top-1 right-1 bg-club-primary text-btn-text text-xs font-bold w-5 h-5 flex items-center justify-center rounded-full animate-pulse shadow-md">
+                  {totalBookings}
                 </span>
               )}
             </motion.button>
@@ -189,85 +153,10 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Facilities Catalog */}
-      <section id="facilities" className="py-20 bg-club-surface/50 border-t border-text-main/10 relative z-10">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-6">
-            <div>
-              <h2 className="text-4xl md:text-5xl font-display font-black text-club-accent uppercase mb-4">
-                Our Facilities
-              </h2>
-              <p className="text-text-muted text-lg max-w-2xl">
-                Select from our premium catalog of exclusive reservations and per-person access passes.
-              </p>
-            </div>
-            <div className="flex items-center gap-2 text-sm font-bold bg-brand-blue-light/20 text-brand-blue px-4 py-2 rounded-full">
-              <Clock className="w-4 h-4" />
-              <span>Open 8:00 AM - 5:00 PM Daily</span>
-            </div>
-          </div>
+      {/* Facilities Slider / Carousel */}
+      <FacilitiesSlider onAddToCart={addBookingToCart} />
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {SERVICES.map((service, idx) => (
-              <motion.div
-                key={service.id}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: idx * 0.1 }}
-                className="bg-club-surface rounded-3xl p-8 flex flex-col h-full border border-text-main/5 hover:shadow-[0_12px_40px_var(--color-shadow-color)] hover:-translate-y-2 transition-all duration-300 relative group"
-              >
-                {service.popular && (
-                  <span className="absolute -top-3 -right-3 bg-club-primary text-btn-text text-xs font-black uppercase tracking-widest py-1 px-3 rounded-full shadow-lg">
-                    Popular
-                  </span>
-                )}
-                {service.premium && (
-                  <span className="absolute -top-3 -right-3 bg-gold-gradient text-club-accent text-xs font-black uppercase tracking-widest py-1 px-3 rounded-full shadow-lg">
-                    Premium
-                  </span>
-                )}
 
-                <div className="w-14 h-14 rounded-2xl bg-club-bg flex items-center justify-center mb-6 text-club-primary group-hover:scale-110 group-hover:bg-club-primary group-hover:text-btn-text transition-all">
-                  <service.icon className="w-7 h-7" />
-                </div>
-                
-                <h3 className="text-2xl font-display font-bold text-club-accent uppercase leading-tight mb-3">
-                  {service.title}
-                </h3>
-                <p className="text-text-muted text-sm mb-6 flex-grow">
-                  {service.description}
-                </p>
-
-                <div className="space-y-3 mb-8">
-                  <div className="flex items-center gap-3 text-sm font-medium">
-                    <CheckCircle2 className="w-4 h-4 text-club-primary" />
-                    <span>{service.type}</span>
-                  </div>
-                  <div className="flex items-center gap-3 text-sm font-medium">
-                    <Users className="w-4 h-4 text-brand-blue" />
-                    <span>{service.capacity}</span>
-                  </div>
-                </div>
-
-                <div className="mt-auto pt-6 border-t border-club-bg flex items-center justify-between">
-                  <div>
-                    <span className="block text-xs text-text-muted font-bold uppercase tracking-widest mb-1">Rate</span>
-                    <span className="text-xl font-black text-club-accent">{formatCOP(service.rate)}</span>
-                  </div>
-                  <button 
-                    onClick={() => addToCart(service)}
-                    className="p-3 bg-club-accent text-club-bg rounded-xl hover:bg-club-primary hover:text-btn-text transition-colors shadow-md"
-                    aria-label="Add to cart"
-                  >
-                    <Plus className="w-6 h-6" />
-                  </button>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
 
       {/* Footer */}
       <footer id="about" className="bg-club-accent text-club-bg py-16 border-t-[8px] border-club-primary">
@@ -320,95 +209,209 @@ export default function Home() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50"
+              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50"
               onClick={() => setIsCartOpen(false)}
             />
-            <motion.div 
+            <motion.aside 
               initial={{ x: '100%' }}
               animate={{ x: 0 }}
               exit={{ x: '100%' }}
-              transition={{ type: "spring", damping: 25, stiffness: 200 }}
-              className="fixed top-0 right-0 h-full w-full md:w-[480px] bg-club-surface shadow-2xl z-50 flex flex-col border-l border-text-main/10"
+              transition={{ type: "spring", damping: 25, stiffness: 220 }}
+              className="fixed top-0 right-0 h-full w-full sm:w-[500px] md:w-[540px] bg-club-surface shadow-2xl z-50 flex flex-col border-l border-text-main/10"
+              style={{ backgroundColor: 'var(--color-club-surface, #FFFFFF)' }}
             >
-              <div className="p-6 border-b border-club-bg flex items-center justify-between bg-club-bg/50">
+              {/* Header */}
+              <div className="p-6 border-b border-text-main/10 flex items-center justify-between bg-club-bg/50 backdrop-blur-md">
                 <div className="flex items-center gap-3">
-                  <ShoppingCart className="w-6 h-6 text-club-accent" />
-                  <h2 className="text-xl font-display font-black uppercase text-club-accent">Your Cart</h2>
+                  <div className="p-2.5 rounded-xl bg-club-primary/20 text-club-primary">
+                    <ShoppingCart className="w-5 h-5 text-text-main" />
+                  </div>
+                  <div>
+                    <h2 className="text-xl font-display font-black uppercase text-club-accent tracking-tight">
+                      Tus Reservas
+                    </h2>
+                    <span className="text-xs font-sans text-text-muted">
+                      {totalBookings} {totalBookings === 1 ? 'instalación seleccionada' : 'instalaciones seleccionadas'}
+                    </span>
+                  </div>
                 </div>
                 <button 
                   onClick={() => setIsCartOpen(false)}
-                  className="p-2 hover:bg-white rounded-full transition-colors text-text-muted hover:text-club-accent"
+                  className="p-2.5 hover:bg-black/5 rounded-full transition-colors text-text-muted hover:text-club-accent focus:outline-none focus:ring-2 focus:ring-club-primary"
+                  aria-label="Cerrar carrito"
                 >
-                  <X className="w-6 h-6" />
+                  <X className="w-5 h-5" />
                 </button>
               </div>
 
+              {/* Items List */}
               <div className="flex-1 overflow-y-auto p-6 space-y-4">
                 {cart.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center h-full text-text-muted text-center">
-                    <ShoppingCart className="w-16 h-16 mb-4 opacity-20" />
-                    <p className="font-medium text-lg">Your cart is empty</p>
-                    <p className="text-sm">Start booking our premium facilities.</p>
+                  <div className="flex flex-col items-center justify-center h-full text-text-muted text-center py-16">
+                    <div className="w-20 h-20 rounded-full bg-club-bg flex items-center justify-center mb-4 text-text-muted/40 border border-text-main/10">
+                      <ShoppingCart className="w-10 h-10" />
+                    </div>
+                    <p className="font-display font-black text-xl text-club-accent uppercase tracking-tight">
+                      Tu carrito está vacío
+                    </p>
+                    <p className="font-sans text-sm text-text-muted max-w-xs mt-1">
+                      Explora nuestras instalaciones destacadas y reserva tu cancha o pase de acceso.
+                    </p>
+                    <button
+                      onClick={() => setIsCartOpen(false)}
+                      className="mt-6 px-6 py-3 rounded-xl bg-club-primary text-btn-text font-sans font-bold text-xs uppercase tracking-wider hover:bg-brand-green-dark transition-all shadow-md active:scale-95"
+                    >
+                      Explorar Instalaciones
+                    </button>
                   </div>
                 ) : (
-                  cart.map((item) => (
-                    <motion.div 
-                      layout
-                      key={item.id} 
-                      className="flex items-center gap-4 bg-club-bg/50 p-4 rounded-2xl border border-text-main/5"
-                    >
-                      <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center text-club-primary shrink-0 shadow-sm">
-                        <item.icon className="w-6 h-6" />
-                      </div>
-                      
-                      <div className="flex-1 min-w-0">
-                        <h4 className="font-bold text-club-accent truncate">{item.title}</h4>
-                        <p className="text-sm font-medium text-club-primary">{formatCOP(item.rate)}</p>
-                      </div>
+                  cart.map((item) => {
+                    const IconComponent = item.icon || Trophy;
 
-                      <div className="flex items-center gap-3 bg-white px-3 py-1.5 rounded-lg shadow-sm border border-text-main/5">
-                        <button 
-                          onClick={() => updateQuantity(item.id, -1)}
-                          className="text-text-muted hover:text-club-accent transition-colors"
-                        >
-                          <Minus className="w-4 h-4" />
-                        </button>
-                        <span className="font-bold text-club-accent w-4 text-center">{item.quantity}</span>
-                        <button 
-                          onClick={() => updateQuantity(item.id, 1)}
-                          className="text-text-muted hover:text-club-accent transition-colors"
-                        >
-                          <Plus className="w-4 h-4" />
-                        </button>
-                      </div>
-
-                      <button 
-                        onClick={() => removeFromCart(item.id)}
-                        className="p-2 text-text-muted hover:text-red-500 transition-colors shrink-0"
+                    return (
+                      <motion.div 
+                        layout
+                        initial={{ opacity: 0, y: 15 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 0.95 }}
+                        key={item.id} 
+                        className="bg-club-bg/40 p-4 sm:p-5 rounded-2xl border border-text-main/10 flex flex-col gap-3.5 transition-all hover:border-club-primary/30 relative group"
                       >
-                        <X className="w-5 h-5" />
-                      </button>
-                    </motion.div>
-                  ))
+                        {/* Top: Thumbnail, Title, Badge & Delete */}
+                        <div className="flex items-start gap-3.5">
+                          {/* Thumbnail / Icon */}
+                          <div className="relative w-16 h-16 rounded-xl overflow-hidden bg-club-bg shrink-0 border border-text-main/10">
+                            {item.image ? (
+                              <Image
+                                src={item.image}
+                                alt={item.facilityName}
+                                fill
+                                sizes="64px"
+                                className="object-cover"
+                              />
+                            ) : null}
+                            <div 
+                              className="absolute top-1 left-1 p-1 rounded-md backdrop-blur-md bg-white/90 shadow-xs"
+                              style={{ color: item.primaryColor || '#B0BF3F' }}
+                            >
+                              <IconComponent className="w-3.5 h-3.5" />
+                            </div>
+                          </div>
+
+                          {/* Info */}
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 mb-1">
+                              <span 
+                                className="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-sans font-bold uppercase tracking-wider text-white shadow-xs"
+                                style={{ backgroundColor: item.primaryColor || '#B0BF3F' }}
+                              >
+                                {item.modalidad}
+                              </span>
+                            </div>
+                            <h4 className="font-display font-black text-base text-club-accent uppercase leading-snug line-clamp-1">
+                              {item.facilityName}
+                            </h4>
+
+                            {/* Schedule & Attendance metadata */}
+                            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1 text-xs text-text-muted font-sans">
+                              <span className="flex items-center gap-1 font-medium">
+                                <Calendar className="w-3.5 h-3.5 text-club-primary" />
+                                {item.date}
+                              </span>
+                              <span className="flex items-center gap-1 font-medium">
+                                <Clock className="w-3.5 h-3.5 text-brand-blue" />
+                                {item.time}
+                              </span>
+                              {item.people && (
+                                <span className="flex items-center gap-1 font-medium text-text-main">
+                                  <Users className="w-3.5 h-3.5 text-brand-green-dark" />
+                                  {item.people} {item.people === 1 ? 'persona' : 'personas'}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Remove button */}
+                          <button 
+                            onClick={() => removeFromCart(item.id)}
+                            className="p-1.5 rounded-lg text-text-muted hover:text-red-500 hover:bg-red-500/10 transition-colors shrink-0"
+                            aria-label="Eliminar reserva"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+
+                        {/* Bottom: Hours adjuster and Subtotal */}
+                        <div className="flex items-center justify-between pt-3 border-t border-text-main/10 font-sans">
+                          {/* Stepper de Horas */}
+                          <div className="flex items-center gap-2 bg-club-surface px-2 py-1 rounded-xl border border-text-main/15 shadow-xs">
+                            <button 
+                              onClick={() => updateHours(item.id, -1)}
+                              disabled={item.hours <= 1}
+                              className="w-7 h-7 flex items-center justify-center text-text-muted hover:text-club-accent disabled:opacity-30 disabled:pointer-events-none transition-colors"
+                              aria-label="Disminuir horas"
+                            >
+                              <Minus className="w-3.5 h-3.5" />
+                            </button>
+                            <span className="font-display font-black text-xs text-club-accent px-1">
+                              {item.hours} {item.hours === 1 ? 'hr' : 'hrs'}
+                            </span>
+                            <button 
+                              onClick={() => updateHours(item.id, 1)}
+                              disabled={item.hours >= 8}
+                              className="w-7 h-7 flex items-center justify-center text-text-muted hover:text-club-accent disabled:opacity-30 disabled:pointer-events-none transition-colors"
+                              aria-label="Aumentar horas"
+                            >
+                              <Plus className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+
+                          {/* Subtotal */}
+                          <div className="text-right">
+                            <span className="text-[10px] uppercase font-bold text-text-muted tracking-wider block">
+                              Subtotal
+                            </span>
+                            <span className="text-lg font-display font-black text-club-accent">
+                              {formatCOP(item.subtotal)}
+                            </span>
+                          </div>
+                        </div>
+                      </motion.div>
+                    );
+                  })
                 )}
               </div>
 
+              {/* Cart Footer */}
               {cart.length > 0 && (
-                <div className="p-6 bg-club-bg/80 border-t border-text-main/10 backdrop-blur-sm">
-                  <div className="flex justify-between items-center mb-6">
-                    <span className="text-lg font-bold text-text-muted uppercase tracking-widest">Total</span>
-                    <span className="text-3xl font-display font-black text-club-accent">{formatCOP(totalCost)}</span>
+                <div className="p-6 bg-club-bg/80 border-t border-text-main/10 backdrop-blur-md">
+                  <div className="space-y-2 mb-5 font-sans">
+                    <div className="flex justify-between items-center text-sm text-text-muted">
+                      <span>Total de Reservas</span>
+                      <span className="font-bold text-text-main">{totalBookings}</span>
+                    </div>
+                    <div className="flex justify-between items-center pt-2 border-t border-text-main/10">
+                      <span className="text-base font-display font-bold text-text-muted uppercase tracking-widest">
+                        Total a Pagar
+                      </span>
+                      <span className="text-3xl font-display font-black text-club-accent">
+                        {formatCOP(totalCost)}
+                      </span>
+                    </div>
                   </div>
-                  <button className="w-full py-4 bg-club-accent text-club-bg font-bold uppercase tracking-widest rounded-xl hover:bg-club-primary hover:text-btn-text transition-all hover:shadow-[0_8px_30px_rgba(176,191,63,0.4)] hover:-translate-y-1">
-                    Proceed to Checkout
+
+                  <button className="w-full py-4 bg-club-accent text-btn-text font-sans font-bold uppercase tracking-widest text-sm rounded-2xl hover:bg-club-primary transition-all duration-300 shadow-xl hover:shadow-[0_10px_30px_rgba(176,191,63,0.4)] hover:-translate-y-0.5 active:scale-[0.98] flex items-center justify-center gap-2">
+                    <span>Continuar al Pago</span>
+                    <ArrowRight className="w-4 h-4" />
                   </button>
-                  <p className="text-xs text-center text-text-muted mt-4 flex items-center justify-center gap-1">
-                    <MapPin className="w-3 h-3" />
-                    All bookings use America/Bogota timezone
+
+                  <p className="text-xs text-center text-text-muted mt-4 flex items-center justify-center gap-1.5">
+                    <MapPin className="w-3.5 h-3.5 text-brand-blue" />
+                    <span>Horario oficial: America/Bogota (8:00 AM - 5:00 PM)</span>
                   </p>
                 </div>
               )}
-            </motion.div>
+            </motion.aside>
           </>
         )}
       </AnimatePresence>
