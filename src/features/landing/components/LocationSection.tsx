@@ -11,7 +11,7 @@ export function LocationSection() {
   return (
     <section 
       id="contact" 
-      className="relative py-24 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-[#ECEBE1] via-[#ECEBE1] to-[#A0C3D9]/25 overflow-hidden"
+      className="relative py-24 px-4 sm:px-6 lg:px-8 bg-linear-to-b from-club-bg via-club-bg to-brand-blue-light/25 overflow-hidden"
       style={{ backgroundColor: 'var(--color-club-bg, #ECEBE1)' }}
     >
       {/* Decorative ambient gradients */}
@@ -141,7 +141,7 @@ export function LocationSection() {
           {/* Right Column: Interactive Map */}
           <div className="relative group">
             <div 
-              className="relative w-full h-[450px] sm:h-[500px] rounded-3xl p-2.5 overflow-hidden transition-all duration-500 ease-out group-hover:scale-[1.015] border border-text-main/10"
+              className="relative w-full h-112.5 sm:h-125 rounded-3xl p-2.5 overflow-hidden transition-all duration-500 ease-out group-hover:scale-[1.015] border border-text-main/10"
               style={{ 
                 backgroundColor: 'var(--color-club-surface, #FFFFFF)',
                 boxShadow: '0 24px 60px -12px var(--color-shadow-color, rgba(232, 76, 123, 0.15))'
@@ -177,7 +177,7 @@ export function LocationSection() {
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label="Abrir ubicación en Google Maps"
-                  className="inline-flex items-center gap-2.5 px-6 py-3.5 rounded-2xl font-bold uppercase tracking-wider text-xs sm:text-sm text-btn-text shadow-xl hover:shadow-[0_12px_28px_rgba(176,191,63,0.45)] transition-all duration-300 transform group-hover:translate-y-[-2px] hover:scale-105 active:scale-95"
+                  className="inline-flex items-center gap-2.5 px-6 py-3.5 rounded-2xl font-bold uppercase tracking-wider text-xs sm:text-sm text-btn-text shadow-xl hover:shadow-[0_12px_28px_rgba(176,191,63,0.45)] transition-all duration-300 transform group-hover:-translate-y-0.5 hover:scale-105 active:scale-95"
                   style={{ backgroundColor: 'var(--color-club-primary, #B0BF3F)' }}
                 >
                   <MapPin className="w-4 h-4 text-btn-text fill-btn-text/20" />
