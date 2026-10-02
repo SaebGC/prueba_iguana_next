@@ -5,6 +5,7 @@ import Image from 'next/image';
 import { ShoppingCart, X, Plus, Minus, MapPin, ChevronRight, Trophy, Calendar, Clock, Users, Trash2, ArrowRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FacilitiesSlider, BookingPayload } from '@/components/FacilitiesSlider';
+import { LocationSection } from '@/components/LocationSection';
 
 
 
@@ -156,7 +157,8 @@ export default function Home() {
       {/* Facilities Slider / Carousel */}
       <FacilitiesSlider onAddToCart={addBookingToCart} />
 
-
+      {/* Location & Contact Section */}
+      <LocationSection />
 
       {/* Footer */}
       <footer id="about" className="bg-club-accent text-club-bg py-16 border-t-[8px] border-club-primary">
