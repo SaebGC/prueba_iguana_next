@@ -29,34 +29,10 @@ import {
   Plus
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import type { FacilityItem, BookingPayload } from '../types';
+import { useCart } from './Cart/CartContext';
 
-export interface FacilityItem {
-  id: string;
-  name: string;
-  sport: string;
-  category: string;
-  icon: React.ComponentType<{ className?: string }>;
-  rate: string;
-  rateType: string;
-  numericRate: number;
-  capacity: string;
-  rules?: string;
-  description: string;
-  primaryColor: string;
-  secondaryColor: string;
-  badge: string;
-  image: string;
-}
-
-export interface BookingPayload {
-  facility: FacilityItem;
-  selectedDate: string;
-  selectedTime: string;
-  hours: number;
-  people: number;
-  totalPrice: number;
-  isExclusive: boolean;
-}
+export type { FacilityItem, BookingPayload };
 
 export const FACILITIES_DATA: FacilityItem[] = [
   {
@@ -265,8 +241,6 @@ export function FacilityDetailModal({
   const [selectedTime, setSelectedTime] = useState('09:00 AM');
   const [hours, setHours] = useState(1);
   const [people, setPeople] = useState(1);
-
-
 
   // Manejo de tecla Escape
   useEffect(() => {
@@ -529,7 +503,7 @@ export function FacilityDetailModal({
                     <button
                       type="button"
                       onClick={handleAddToCart}
-                      className="flex-1 py-4 px-6 rounded-2xl font-sans font-bold uppercase tracking-widest text-sm flex items-center justify-center gap-3 transition-all duration-300 shadow-lg hover:-translate-y-0.5 active:scale-[0.98] text-white"
+                      className="flex-1 py-4 px-6 rounded-2xl font-sans font-bold uppercase tracking-widest text-sm flex items-center justify-center gap-3 transition-all duration-300 shadow-lg hover:-translate-y-0.5 active:scale-[0.98] text-white cursor-pointer"
                       style={{
                         backgroundColor: 'var(--color-club-accent, #000000)',
                         boxShadow: '0 8px 25px -5px rgba(0, 0, 0, 0.25)'
@@ -562,7 +536,7 @@ export function FacilityDetailModal({
                     <button
                       type="button"
                       onClick={() => setIsFavorite(!isFavorite)}
-                      className="p-4 rounded-2xl border-2 transition-all duration-300 flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-club-primary active:scale-90"
+                      className="p-4 rounded-2xl border-2 transition-all duration-300 flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-club-primary active:scale-90 cursor-pointer"
                       style={{
                         borderColor: isFavorite ? '#D5D96A' : 'rgba(76, 89, 28, 0.2)',
                         backgroundColor: isFavorite ? 'rgba(213, 217, 106, 0.15)' : 'transparent',
@@ -648,9 +622,12 @@ interface FacilitiesSliderProps {
   onAddToCart?: (payload: BookingPayload) => void;
 }
 
-export function FacilitiesSlider({ onAddToCart }: FacilitiesSliderProps) {
+export function FacilitiesSlider({ onAddToCart }: FacilitiesSliderProps = {}) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [selectedFacility, setSelectedFacility] = useState<FacilityItem | null>(null);
+  const { addBookingToCart } = useCart();
+
+  const handleAddToCart = onAddToCart || addBookingToCart;
 
   const scroll = (direction: 'left' | 'right') => {
     if (scrollRef.current) {
@@ -695,7 +672,7 @@ export function FacilitiesSlider({ onAddToCart }: FacilitiesSliderProps) {
                 <button
                   type="button"
                   onClick={() => scroll('left')}
-                  className="p-3.5 rounded-full bg-club-surface text-club-accent border border-text-main/15 hover:border-club-primary hover:bg-club-primary/10 transition-all duration-300 shadow-sm active:scale-95 focus:outline-none focus:ring-2 focus:ring-club-primary"
+                  className="p-3.5 rounded-full bg-club-surface text-club-accent border border-text-main/15 hover:border-club-primary hover:bg-club-primary/10 transition-all duration-300 shadow-sm active:scale-95 focus:outline-none focus:ring-2 focus:ring-club-primary cursor-pointer"
                   aria-label="Ver anterior"
                 >
                   <ChevronLeft className="w-5 h-5" />
@@ -703,7 +680,7 @@ export function FacilitiesSlider({ onAddToCart }: FacilitiesSliderProps) {
                 <button
                   type="button"
                   onClick={() => scroll('right')}
-                  className="p-3.5 rounded-full bg-club-surface text-club-accent border border-text-main/15 hover:border-club-primary hover:bg-club-primary/10 transition-all duration-300 shadow-sm active:scale-95 focus:outline-none focus:ring-2 focus:ring-club-primary"
+                  className="p-3.5 rounded-full bg-club-surface text-club-accent border border-text-main/15 hover:border-club-primary hover:bg-club-primary/10 transition-all duration-300 shadow-sm active:scale-95 focus:outline-none focus:ring-2 focus:ring-club-primary cursor-pointer"
                   aria-label="Ver siguiente"
                 >
                   <ChevronRight className="w-5 h-5" />
@@ -820,7 +797,7 @@ export function FacilitiesSlider({ onAddToCart }: FacilitiesSliderProps) {
                       <button
                         type="button"
                         onClick={() => setSelectedFacility(facility)}
-                        className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl font-sans font-bold text-xs uppercase tracking-wider bg-club-accent text-btn-text hover:bg-club-primary transition-all duration-300 shadow-md hover:shadow-[0_4px_15px_rgba(176,191,63,0.3)] hover:-translate-y-0.5 active:scale-95 group/btn"
+                        className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl font-sans font-bold text-xs uppercase tracking-wider bg-club-accent text-btn-text hover:bg-club-primary transition-all duration-300 shadow-md hover:shadow-[0_4px_15px_rgba(176,191,63,0.3)] hover:-translate-y-0.5 active:scale-95 group/btn cursor-pointer"
                         style={{
                           backgroundColor: 'var(--color-club-accent, #000000)',
                           color: 'var(--color-btn-text, #FFFFFF)',
@@ -844,8 +821,10 @@ export function FacilitiesSlider({ onAddToCart }: FacilitiesSliderProps) {
         facility={selectedFacility}
         isOpen={Boolean(selectedFacility)}
         onClose={() => setSelectedFacility(null)}
-        onAddToCart={onAddToCart}
+        onAddToCart={handleAddToCart}
       />
     </>
   );
 }
+
+export default FacilitiesSlider;
