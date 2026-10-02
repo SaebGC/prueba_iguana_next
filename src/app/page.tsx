@@ -117,42 +117,75 @@ export default function Home() {
       </nav>
 
       {/* Hero Section */}
-      <section className="relative pt-32 pb-20 lg:pt-48 lg:pb-32 overflow-hidden">
-        {/* Dynamic decorative shapes */}
-        <div className="absolute top-0 right-0 -mr-20 -mt-20 w-96 h-96 bg-brand-blue-light/30 rounded-full blur-3xl" />
-        <div className="absolute bottom-0 left-0 -ml-20 -mb-20 w-80 h-80 bg-brand-yellow/30 rounded-full blur-3xl" />
-        
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+      <section className="relative min-h-[90vh] flex items-center pt-32 pb-24 lg:pt-44 lg:pb-36 overflow-hidden">
+        {/* Full-bleed Background Image */}
+        <div className="absolute inset-0 z-0">
+          <Image
+            src="/Lucia_Caminos_gym.jpg"
+            alt="Vice City Iguana Club - High-Energy Training Facility"
+            fill
+            priority
+            quality={90}
+            className="object-cover object-center"
+            sizes="100vw"
+          />
+
+          {/* Sleek Readability Overlays: Directional Vignette & Dark Contrast */}
+          <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/70 to-black/35 md:to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-black/40" />
+
+          {/* Subtle brand neon glow accent */}
+          <div className="absolute -top-24 -left-24 w-96 h-96 bg-club-primary/20 rounded-full blur-3xl pointer-events-none" />
+        </div>
+
+        {/* Content Container */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 w-full">
           <div className="max-w-3xl">
             <motion.div
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6 }}
             >
-              <span className="inline-block py-1 px-3 rounded-full bg-club-accent text-club-bg text-sm font-bold tracking-widest uppercase mb-6">
-                Premium Sports Experience
-              </span>
-              <h1 className="text-6xl md:text-8xl font-display font-black text-club-accent uppercase leading-[0.9] mb-8">
+              {/* Status / Feature Pill */}
+              <div className="inline-flex items-center gap-2 py-1.5 px-4 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-white text-xs sm:text-sm font-bold tracking-widest uppercase mb-6 shadow-sm">
+                <span className="w-2 h-2 rounded-full bg-club-primary animate-pulse" />
+                <span>Premium Sports Experience</span>
+              </div>
+
+              {/* Motivational Headline */}
+              <h1 className="text-6xl sm:text-7xl md:text-8xl font-display font-black text-white uppercase leading-[0.9] mb-8 drop-shadow-md">
                 Unleash <br />
-                <span className="text-club-primary">Your Potential</span>
+                <span className="text-club-primary drop-shadow-[0_0_35px_rgba(176,191,63,0.45)]">
+                  Your Potential
+                </span>
               </h1>
-              <p className="text-xl md:text-2xl text-text-muted mb-10 max-w-2xl font-light">
+
+              {/* Descriptive Subtext */}
+              <p className="text-lg sm:text-xl md:text-2xl text-zinc-200 mb-10 max-w-2xl font-light font-sans leading-relaxed drop-shadow-sm">
                 Elevate your game in a high-energy, elite athletic environment. From professional turf fields to Olympic-level pools, the arena is yours.
               </p>
-              
+
+              {/* Action Buttons */}
               <div className="flex flex-col sm:flex-row gap-4">
-                <a href="#facilities" className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-club-primary text-btn-text rounded-full font-bold uppercase tracking-widest hover:bg-brand-green-dark transition-all hover:shadow-[0_0_20px_rgba(176,191,63,0.4)] hover:-translate-y-1">
-                  Book Your Court
+                <a
+                  href="#facilities"
+                  className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-club-primary text-btn-text rounded-full font-bold uppercase tracking-widest hover:bg-brand-green-dark transition-all duration-300 shadow-xl hover:shadow-[0_0_30px_rgba(176,191,63,0.5)] hover:-translate-y-1 active:scale-95"
+                >
+                  <span>Book Your Court</span>
                   <ChevronRight className="w-5 h-5" />
                 </a>
-                <a href="#about" className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-transparent border-2 border-club-accent text-club-accent rounded-full font-bold uppercase tracking-widest hover:bg-club-accent hover:text-club-bg transition-all">
-                  Club Details
+                <a
+                  href="#about"
+                  className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-white/10 backdrop-blur-md border-2 border-white/80 text-white rounded-full font-bold uppercase tracking-widest hover:bg-white hover:text-club-accent transition-all duration-300 active:scale-95"
+                >
+                  <span>Club Details</span>
                 </a>
               </div>
             </motion.div>
           </div>
         </div>
       </section>
+
 
       {/* Facilities Slider / Carousel */}
       <FacilitiesSlider onAddToCart={addBookingToCart} />
